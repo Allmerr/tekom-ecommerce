@@ -8,11 +8,14 @@ USER = {
     "EMAIL": "",
     "CURRECT_PAGE": "" # EXIT, MAIN, MY_PRODUCT, MY_WISHLIST, HISTORY_PRODUCT, BUY_PRODUCT
 }
+console = Console()
+custom_theme = {"success" : "bold white on green", "error" : "bold white on red"}
 
 # get data from json file required string of the file name like "user" to get the data from ./db/user.json
 def utils_get_data(name_of_file):
     with open(f'./db/{name_of_file}.json') as data:
         return json.load(data)
+
 # save data to json file required string of the file name like "user" and dict of data to save the data to ./db/user.json
 def utils_save_data(name_of_file, data):
     with open(f'./db/{name_of_file}.json', 'w') as file:
@@ -73,7 +76,7 @@ def page_login():
                 USER["ID"] = user["id"]
                 USER["EMAIL"] = user["email"]
                 return None
-        print("Login Gagal")
+        console.print("Login Gagal", style=custom_theme["error"])
         chances -= 1
         time.sleep(1)
 
@@ -111,12 +114,12 @@ def page_register():
     
     utils_save_data("user", users)
 
-    print("Register Berhasil")
-    time.sleep(.5)
+    console.print("Register Berhasil", style=custom_theme["success"])
+    time.sleep(1)
 
 # autheticate page return the USER["ID"] if the user is authenticated
 def page_authenticate():
-    print("Selamat Datang Di Aplikasi Tekom Eccomerce\nPilih Menu:\n1. Login\n2. Register\n3. Exit")
+    console.print("[green]---Selamat Datang Di Aplikasi Tekom Eccomerce---[/]\nPilih Menu:\n1. Login\n2. Register\n3. Exit")
     choice = input("Masukan Pilihan: ")
     if choice == "1":
         page_login()
@@ -162,8 +165,8 @@ def page_my_product_create():
 
     utils_save_data("produk", produks)
 
-    print("Produk Berhasil Ditambahkan")
-    time.sleep(.5)
+    console.print("Produk Berhasil Ditambahkan", style=custom_theme["success"])
+    time.sleep(1)
 
     return None
 
@@ -179,7 +182,7 @@ def page_my_product_read():
 
     if len(produks) > 0:        
      
-        print("=Produk Saya - Lihat Produk=")
+        console.print("[green]---Produk Saya - Lihat Produk---[/]")
         utils_display_table(produks)
 
         input("Tekan Enter Untuk Kembali Ke Menu")
@@ -189,16 +192,83 @@ def page_my_product_read():
         time.sleep(1)
         return None
 
-
+# read the product from the database and update the selected product by user from the database
 def page_my_product_update():
-    return None
-def page_my_product_delete():
-    return None
+    utils_clear_screen()
+    produks = utils_get_data("produk")
+    #check if the product is not empty and has product from the current user
+    if len(produks) > 0:        
+        # filter the product based on the user id and remove the user id from the product   
+        produks = [produk for produk in produks if produk['user_id'] == USER["ID"]]
+        for produk in produks:
+            del produk['user_id']    
+        
+        if produks == []:
+            print("Tidak Ada Produk Yang Ditemukan")
+            time.sleep(1)
+            return None
+        
+        console.print("[green]---Produk Saya - Lihat Produk Yang Ingin Diubah---[/]")
+        utils_display_table(produks)
 
+        produk_id = input("Masukan Produk Id Produk Yang Ingin Di Ubah: ")
+
+        name = input("Masukkan Nama Produk: ")
+        price = input("Masukkan Harga Produk: ")
+        stock = input("Masukkan Stok Produk: ")
+        category = input("Masukkan Kategori Produk: ")
+
+        produks = utils_get_data("produk")
+        produks = [produk for produk in produks if produk['id'] != int(produk_id)]
+        produks.append({
+            "id": int(produk_id),
+            "user_id": USER["ID"],
+            "name": name,
+            "price": price,
+            "stock": stock,
+            "category": category
+        })
+
+        utils_save_data("produk", produks)
+
+        console.print("Produk Berhasil Diubah", style=custom_theme["success"])
+        time.sleep(1)
+        return None
+    else:
+        print("Tidak Ada Produk Yang Ditemukan")
+        time.sleep(1)
+        return None
+
+#  read prduct from database and delete the selected product by user from the database
+def page_my_product_delete():
+    utils_clear_screen()
+    # filter the product based on the user id and remove the user id from the product   
+    produks = utils_get_data("produk")
+    produks = [produk for produk in produks if produk['user_id'] == USER["ID"]]
+
+    if len(produks) > 0:        
+        
+        console.print("[green]---Produk Saya - Lihat Produk Yang Ingin Dihapus[/]")
+        utils_display_table(produks)
+
+        produk_id = input("Masukan Produk Id Produk Yang Ingin Di Hapus: ")
+        produks = [produk for produk in produks if produk['id'] != int(produk_id)]
+
+        utils_save_data("produk", produks)
+
+        print("Produk Berhasil Dihapus")
+        time.sleep(1)
+        return None
+    else:
+        print("Tidak Ada Produk Yang Ditemukan")
+        time.sleep(1)
+        return None
+
+# main my product page to display the menu of my product
 def page_my_product():
     while USER["CURRECT_PAGE"] == "MY_PRODUCT":
         utils_clear_screen()
-        print("=Produk Saya=\nPilih Menu:\n1. Tambah Produk\n2. Lihat Produk\n3. Mengubah Produk\n4. Menghapus Produk\n5. Kembali Ke Main Menu")
+        console.print("[green]---Produk Saya---[/]\nPilih Menu:\n1. Tambah Produk\n2. Lihat Produk\n3. Mengubah Produk\n4. Menghapus Produk\n5. Kembali Ke Main Menu")
         choice = input("Masukan Pilihan: ")
         if choice == "1":
             page_my_product_create()
@@ -225,7 +295,7 @@ def page_buy_product():
     return None 
 
 def page_main():
-    print("=Main Menu Tekom Eccomerce=\nPilih Menu:\n1. Belanja Produk\n2. Produk Saya\n3. Keranjang Saya\n4. History Belanja\n5. Logout")
+    console.print("[green]---Main Menu Tekom Eccomerce---[/]\nPilih Menu:\n1. Belanja Produk\n2. Produk Saya\n3. Keranjang Saya\n4. History Belanja\n5. Logout")
     choice = input("Masukan Pilihan: ")
     if choice == "1":
         page_buy_product()
