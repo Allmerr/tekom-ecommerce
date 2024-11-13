@@ -216,8 +216,45 @@ def page_my_product():
             return None
 
 def page_my_wishlist():
-    return None
+    while USER["CURRECT_PAGE"] == "MY_WISHLIST":
+        utils_clear_screen()
 
+        keranjangs = utils_get_data("keranjang")
+
+        keranjangs = [keranjang for keranjang in keranjangs if keranjangs['user_id'] == USER["ID"]]
+        for keranjang in keranjangs:
+            del keranjang['user_id']
+
+    if len(keranjangs) > 0:        
+     
+        print("=Keranjang Saya - Lihat Kerajang=")
+        utils_display_table(keranjangs)
+
+        input("Tekan Enter Untuk Kembali Ke Menu")
+        return None
+    else:
+        print("Tidak Ada Barang Di Keranjang Yang Ditemukan")
+        time.sleep(1)
+        return None
+    
+def page_my_wishlist_create():
+    produks = utils_get_data("produk")
+
+    id_target = "1"
+    data_keranjang = None
+
+    for produk in produks:
+        if produk.get('id') == id_target:
+            data_keranjang = produk
+            break
+    
+    if data_keranjang:
+        with open(f'./db/keranjang.json') as tujuan_keranjang:
+            json.dump(data_keranjang, tujuan_keranjang, indent=4)
+        print(f"Produk sudah ditambahkan ke keranjang")
+    else:
+        print(f"Produk dengan id {id_target} tidak ditemukan")
+            
 def page_history_product():
     return None
 
