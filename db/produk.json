@@ -1,10 +1,1 @@
-[
-    {
-        "id": 1,
-        "user_id": 1,
-        "name": "Baju",
-        "price": 100000,
-        "stock": 5,
-        "category": "Pakaian"
-    }
-]
+[{"id": 1, "user_id": 1, "name": "Baju", "price": 100000, "stock": 5, "category": "Pakaian"}, {"id": 2, "user_id": 2, "name": "test", "price": "100", "stock": "100", "category": "test"}]

@@ -6,14 +6,13 @@ from rich.table import Table
 USER = {
     "ID": "",
     "EMAIL": "",
-    "CURRECT_PAGE": ""
+    "CURRECT_PAGE": "" # EXIT, MAIN, MY_PRODUCT, MY_WISHLIST, HISTORY_PRODUCT, BUY_PRODUCT
 }
 
 # get data from json file required string of the file name like "user" to get the data from ./db/user.json
 def utils_get_data(name_of_file):
     with open(f'./db/{name_of_file}.json') as data:
         return json.load(data)
-    
 # save data to json file required string of the file name like "user" and dict of data to save the data to ./db/user.json
 def utils_save_data(name_of_file, data):
     with open(f'./db/{name_of_file}.json', 'w') as file:
@@ -76,7 +75,7 @@ def page_login():
                 return None
         print("Login Gagal")
         chances -= 1
-        time.sleep(.5)
+        time.sleep(1)
 
 #register page to register the user base of ./db/user.json and return None 
 def page_register():
@@ -130,45 +129,91 @@ def page_authenticate():
     else:
         print("Pilihan Tidak Ada")
 
-def page_buy_product_cretae():
+# create the product and save it to the database
+def page_my_product_create():
+    utils_clear_screen()
+    print("=Tambah Produk=")
+    name = input("Masukkan Nama Produk: ")
+    price = input("Masukkan Harga Produk: ")
+    stock = input("Masukkan Stok Produk: ")
+    category = input("Masukkan Kategori Produk: ")
+
+    produks = utils_get_data("produk")
+
+    for produk in produks:
+        if produk['name'] == name:
+            print("Nama Produk Sudah Ada")
+            time.sleep(.5)
+            return
+
+    if(len(produks) == 0):
+        produk_id = 1
+    else:
+        produk_id = produks[len(produks) - 1]['id'] + 1
+
+    produks.append({
+        "id": produk_id,
+        "user_id": USER["ID"],
+        "name": name,
+        "price": price,
+        "stock": stock,
+        "category": category
+    })
+
+    utils_save_data("produk", produks)
+
+    print("Produk Berhasil Ditambahkan")
+    time.sleep(.5)
+
     return None
 
-def page_buy_product_read():
+# read the product from the database and display it to the user
+def page_my_product_read():
     utils_clear_screen()
     
     produks = utils_get_data("produk")
+    # filter the product based on the user id and remove the user id from the product   
+    produks = [produk for produk in produks if produk['user_id'] == USER["ID"]]
+    for produk in produks:
+        del produk['user_id']
 
-    utils_display_table(produks)
+    if len(produks) > 0:        
+     
+        print("=Produk Saya - Lihat Produk=")
+        utils_display_table(produks)
 
-    input("Tekan Enter Untuk Kembali Ke Menu")
-    return None
-
-def page_buy_product_update():
-    return None
-def page_buy_product_delete():
-    return None
-
-def page_buy_product():
-    utils_clear_screen()
-    print("=Toko Saya=\nPilih Menu:\n1. Tambah Produk\n2. Lihat Produk\n3. Mengubah Produk\n4. Menghapus Produk\n5. Kembali Ke Main Menu")
-
-    choice = input("Masukan Pilihan: ")
-    if choice == "1":
-        page_buy_product_cretae()
-    elif choice == "2":
-        page_buy_product_read()
-    elif choice == "3":
-        page_buy_product_update()
-    elif choice == "4":
-        page_buy_product_delete()
-    elif choice == "5":
+        input("Tekan Enter Untuk Kembali Ke Menu")
         return None
     else:
-        print("Pilihan Tidak Ada")
+        print("Tidak Ada Produk Yang Ditemukan")
+        time.sleep(1)
+        return None
+
+
+def page_my_product_update():
+    return None
+def page_my_product_delete():
     return None
 
-def page_my_merch():
-    return None
+def page_my_product():
+    while USER["CURRECT_PAGE"] == "MY_PRODUCT":
+        utils_clear_screen()
+        print("=Produk Saya=\nPilih Menu:\n1. Tambah Produk\n2. Lihat Produk\n3. Mengubah Produk\n4. Menghapus Produk\n5. Kembali Ke Main Menu")
+        choice = input("Masukan Pilihan: ")
+        if choice == "1":
+            page_my_product_create()
+        elif choice == "2":
+            page_my_product_read()
+        elif choice == "3":
+            page_my_product_update()
+        elif choice == "4":
+            page_my_product_delete()
+        elif choice == "5":
+            USER["CURRECT_PAGE"] = "MAIN"
+            return None
+        else:
+            print("Pilihan Tidak Ada")
+            return None
 
 def page_my_wishlist():
     return None
@@ -176,13 +221,17 @@ def page_my_wishlist():
 def page_history_product():
     return None
 
+def page_buy_product():
+    return None 
+
 def page_main():
-    print("=Main Menu Tekom Eccomerce=\nPilih Menu:\n1. Belanja Produk\n2. Toko Saya\n3. Keranjang Saya\n4. History Belanja\n5. Logout")
+    print("=Main Menu Tekom Eccomerce=\nPilih Menu:\n1. Belanja Produk\n2. Produk Saya\n3. Keranjang Saya\n4. History Belanja\n5. Logout")
     choice = input("Masukan Pilihan: ")
     if choice == "1":
         page_buy_product()
     elif choice == "2":
-        page_my_merch()
+        USER["CURRECT_PAGE"] = "MY_PRODUCT"
+        page_my_product()
     elif choice == "3":
         page_my_wishlist()
     elif choice == "4":
