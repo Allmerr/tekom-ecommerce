@@ -1,0 +1,10 @@
+[
+    {
+        "id": 1,
+        "user_id": 1,
+        "name": "Baju",
+        "price": 100000,
+        "stock": 5,
+        "category": "Pakaian"
+    }
+]
