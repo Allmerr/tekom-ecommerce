@@ -286,6 +286,43 @@ def page_my_product():
             return None
 
 def page_my_wishlist():
+    while USER["CURRECT_PAGE"] == "MY_WISHLIST":
+        utils_clear_screen()
+        console.print("[green]---Keranjang Saya---[/]\nPilih Menu:\n1. Lihat Keranjang\n2. Kembali Ke Main Menu")
+        choice = input("Masukan Pilihan: ")
+        if choice == "1":
+            page_my_wishlist_read()
+        elif choice == "2":
+            USER["CURRECT_PAGE"] = "MAIN"
+            return None
+        else:
+            print("Pilihan Tidak Ada")
+            return None
+
+def page_my_wishlist_read():
+    utils_clear_screen()
+
+    keranjangs = utils_get_data("keranjang")
+    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"]]
+
+    for keranjang in keranjangs:
+        del keranjang['user_id']
+
+    if len(keranjangs) > 0:
+        print("=Keranjang Saya - Lihat Keranjang=")
+        utils_display_table(keranjangs)
+
+        input("Tekan Enter Untuk Kembali Ke Menu")
+        return None
+    else:
+        print("Tidak Ada Barang Di Keranjang Yang Ditemukan")
+        time.sleep(1)
+        return None
+
+def page_my_wishlist_create():
+    return None
+
+def page_my_wishlist_delete():
     return None
 
 def page_history_product():
@@ -303,6 +340,7 @@ def page_main():
         USER["CURRECT_PAGE"] = "MY_PRODUCT"
         page_my_product()
     elif choice == "3":
+        USER["CURRECT_PAGE"] = "MY_WISHLIST"
         page_my_wishlist()
     elif choice == "4":
         page_history_product()
