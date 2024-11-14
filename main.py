@@ -288,11 +288,13 @@ def page_my_product():
 def page_my_wishlist():
     while USER["CURRECT_PAGE"] == "MY_WISHLIST":
         utils_clear_screen()
-        console.print("[green]---Keranjang Saya---[/]\nPilih Menu:\n1. Lihat Keranjang\n2. Kembali Ke Main Menu")
+        console.print("[green]---Keranjang Saya---[/]\nPilih Menu:\n1. Lihat Keranjang\n2. Hapus Produk Dari Keranjang \n3. Kembali Ke Main Menu")
         choice = input("Masukan Pilihan: ")
         if choice == "1":
             page_my_wishlist_read()
         elif choice == "2":
+            page_my_wishlist_delete()
+        elif choice == "3":
             USER["CURRECT_PAGE"] = "MAIN"
             return None
         else:
@@ -319,22 +321,192 @@ def page_my_wishlist_read():
         time.sleep(1)
         return None
 
-def page_my_wishlist_create():
-    return None
-
 def page_my_wishlist_delete():
-    return None
+    utils_clear_screen()
 
+    keranjangs = utils_get_data("keranjang")
+    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"]]
+
+    if len(keranjangs) > 0:
+        print("=Keranjang Saya - Lihat Keranjang Yang Ingin Dihapus=")
+        utils_display_table(keranjangs)
+
+        keranjang_id = input("Masukan Keranjang Id Yang Ingin Di Hapus: ")
+        keranjangs = [keranjang for keranjang in keranjangs if keranjang['id'] != int(keranjang_id)]
+
+        utils_save_data("keranjang", keranjangs)
+
+        print("Keranjang Berhasil Dihapus")
+        time.sleep(1)
+        return None
+    
 def page_history_product():
     return None
 
+def page_buy_product_read():
+    utils_clear_screen()
+    produks = utils_get_data("produk")
+
+    produks = [produk for produk in produks if produk['user_id'] != USER["ID"]]
+    
+    users = utils_get_data("user")
+    for produk in produks:
+        user = next((user for user in users if user["id"] == produk["user_id"]), None)
+        if user:
+            produk["user_email"] = user["email"]
+    
+    for produk in produks:
+        del produk['user_id']
+
+    console.print("[green]---Beli Produk - Lihat Produk---[/]")
+    utils_display_table(produks)
+
+    while True:
+        produk_ids = input("Masukkan ID Produk yang Ingin Dibeli (pisahkan dengan : untuk kuantitas) atau ketik 'back' untuk kembali ke menu: ")
+        if produk_ids.lower() == 'back':
+            return None
+        if ":" not in produk_ids:
+            console.print("Format ID Produk Salah", style=custom_theme["error"])
+            time.sleep(1)
+            return None
+        produk_id = produk_ids.split(":")[0]
+        produk_qty = produk_ids.split(":")[1]
+        produk = next((produk for produk in produks if produk["id"] == int(produk_id)), None)
+        if produk:
+            keranjangs = utils_get_data("keranjang")
+            if(len(keranjangs) == 0):
+                keranjang_id = 1
+            else:
+                keranjang_id = keranjangs[len(keranjangs) - 1]['id'] + 1
+            
+            #check apakah kuantitas yang diinputkan lebih dari stok
+            if int(produk_qty) > int(produk["stock"]):
+                console.print("Kuantitas Yang Dimasukkan Melebihi Stok", style=custom_theme["error"])
+                time.sleep(1)
+                return None
+            
+            # check if the product is already in the cart
+            if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"]), None):
+                console.print("Produk Sudah Ada Di Keranjang, Silahkan Hapus Dahulu", style=custom_theme["error"])
+                time.sleep(1)
+                return None
+
+            keranjangs.append({
+                "id": keranjang_id,
+                "user_id": USER["ID"],
+                "produk_id": produk_id,
+                "qty": produk_qty,
+                "is_checkout": False
+            })
+
+            utils_save_data("keranjang", keranjangs)
+
+            console.print("Produk Berhasil Ditambahkan Ke Keranjang", style=custom_theme["success"])
+            time.sleep(1)
+            return None
+        else:
+            console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
+            time.sleep(1)
+            return None
+
+def page_buy_product_search():
+    utils_clear_screen()
+    keyword = input("Masukkan Kata Kunci Produk yang Ingin Dicari: ").lower()
+    
+    produks = utils_get_data("produk")
+    produks = [produk for produk in produks if produk['user_id'] != USER["ID"]]
+    
+    users = utils_get_data("user")
+    for produk in produks:
+        user = next((user for user in users if user["id"] == produk["user_id"]), None)
+        if user:
+            produk["user_email"] = user["email"]
+    
+    for produk in produks:
+        del produk['user_id']
+    
+    filtered_produks = [produk for produk in produks if keyword in produk['name'].lower() or keyword in produk['category'].lower()]
+    
+    if len(filtered_produks) > 0:
+        console.print("[green]---Beli Produk - Hasil Pencarian---[/]")
+        utils_display_table(filtered_produks)
+    else:
+        console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
+        time.sleep(1)
+        return None
+
+    while True:
+        produk_ids = input("Masukkan ID Produk yang Ingin Dibeli (pisahkan dengan : untuk kuantitas) atau ketik 'back' untuk kembali ke menu: ")
+        if produk_ids.lower() == 'back':
+            return None
+        if ":" not in produk_ids:
+            console.print("Format ID Produk Salah", style=custom_theme["error"])
+            time.sleep(1)
+            return None
+        produk_id = produk_ids.split(":")[0]
+        produk_qty = produk_ids.split(":")[1]
+        produk = next((produk for produk in filtered_produks if produk["id"] == int(produk_id)), None)
+        if produk:
+            keranjangs = utils_get_data("keranjang")
+            if(len(keranjangs) == 0):
+                keranjang_id = 1
+            else:
+                keranjang_id = keranjangs[len(keranjangs) - 1]['id'] + 1
+            
+            if int(produk_qty) > int(produk["stock"]):
+                console.print("Kuantitas Yang Dimasukkan Melebihi Stok", style=custom_theme["error"])
+                time.sleep(1)
+                return None
+            
+            if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"]), None):
+                console.print("Produk Sudah Ada Di Keranjang, Silahkan Hapus Dahulu", style=custom_theme["error"])
+                time.sleep(1)
+                return None
+
+            keranjangs.append({
+                "id": keranjang_id,
+                "user_id": USER["ID"],
+                "produk_id": produk_id,
+                "qty": produk_qty,
+                "is_checkout": False
+            })
+
+            utils_save_data("keranjang", keranjangs)
+
+            console.print("Produk Berhasil Ditambahkan Ke Keranjang", style=custom_theme["success"])
+            time.sleep(1)
+            return None
+        else:
+            console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
+            time.sleep(1)
+            return None
+
+def page_buy_product_category():
+    return None
+
 def page_buy_product():
-    return None 
+     while USER["CURRECT_PAGE"] == "BUY_PRODUCT":
+        utils_clear_screen()
+        console.print("[green]---Beli Produk---[/]\nPilih Menu:\n1. Lihat Produk\n2. Cari Produk\n3. Cari Kategori\n4. Kembali Ke Main Menu")
+        choice = input("Masukan Pilihan: ")
+        if choice == "1":
+            page_buy_product_read()
+        elif choice == "2":
+            page_buy_product_search()
+        elif choice == "3":
+            page_buy_product_category()
+        elif choice == "4":
+            USER["CURRECT_PAGE"] = "MAIN"
+            return None
+        else:
+            print("Pilihan Tidak Ada")
+            return None
 
 def page_main():
     console.print("[green]---Main Menu Tekom Eccomerce---[/]\nPilih Menu:\n1. Belanja Produk\n2. Produk Saya\n3. Keranjang Saya\n4. History Belanja\n5. Logout")
     choice = input("Masukan Pilihan: ")
     if choice == "1":
+        USER["CURRECT_PAGE"] = "BUY_PRODUCT"
         page_buy_product()
     elif choice == "2":
         USER["CURRECT_PAGE"] = "MY_PRODUCT"

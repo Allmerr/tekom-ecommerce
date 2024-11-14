@@ -1,1 +1,1 @@
-[{"id": 1, "user_id": 1, "name": "baju", "price": "100", "stock": "10", "category": "pakaian"}]
+[{"id": 1, "user_id": 1, "name": "bantal", "price": "100", "stock": "10", "category": "pakaian"}, {"id": 2, "user_id": 1, "name": "selimut", "price": "80", "stock": "1", "category": "pakaian"}, {"id": 3, "user_id": 3, "name": "baju", "price": "50", "stock": "10", "category": "pakaian"},  {"id": 4, "user_id": 2, "name": "baju", "price": "50", "stock": "10", "category": "pakaian"}]
