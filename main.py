@@ -386,7 +386,7 @@ def page_my_wishlist_delete():
     utils_clear_screen()
 
     keranjangs = utils_get_data("keranjang")
-    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"]]
+    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"] and keranjang['is_checkout'] == False]
 
     if len(keranjangs) > 0:
         print("=Keranjang Saya - Lihat Keranjang Yang Ingin Dihapus=")
@@ -402,7 +402,32 @@ def page_my_wishlist_delete():
         return None
     
 def page_history_product():
-    return None
+    utils_clear_screen()
+
+    transactions = utils_get_data("transaksi")
+    transactions = [transaction for transaction in transactions if transaction['user_id'] == USER["ID"]]
+
+    if len(transactions) > 0:
+        print("=Riwayat Belanja=")
+        for transaction in transactions:
+            del transaction["user_id"]
+        
+        produks = utils_get_data("produk")
+        for transaction in transactions:
+            produk = next((produk for produk in produks if str(produk["id"]) == str(transaction["produk_id"])), None)
+            if produk:
+                del transaction["produk_id"]
+                transaction["total_price"] = int(produk["price"]) * int(transaction["qty"])
+                transaction["produk_name"] = produk["name"]
+        
+        utils_display_table(transactions)
+
+        input("Tekan Enter Untuk Kembali Ke Menu")
+        return None
+    else:
+        print("Tidak Ada Riwayat Belanja Yang Ditemukan")
+        time.sleep(3)
+        return None
 
 def page_buy_product_read():
     utils_clear_screen()
@@ -576,6 +601,7 @@ def page_main():
         USER["CURRECT_PAGE"] = "MY_WISHLIST"
         page_my_wishlist()
     elif choice == "4":
+        USER["CURRECT_PAGE"] = "HISTORY_PRODUCT"
         page_history_product()
     elif choice == "5":
         utils_clear_screen()
