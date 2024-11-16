@@ -25,7 +25,7 @@ Aplikasi e-commerce shopping adalah platform yang memudahkan pengguna untuk menc
 | name |    string   |
 | price |    int   |
 | stock |    int   |
-| category(perlu buat table kategori njir) |    string   |
+| category |    string   |
 
 
 ## Kontibutor

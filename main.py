@@ -1,3 +1,4 @@
+from random import Random
 import json, os, time, getpass
 from rich.console import Console
 from rich.table import Table
@@ -285,16 +286,76 @@ def page_my_product():
             print("Pilihan Tidak Ada")
             return None
 
+def page_my_wishlist_checkout():
+    utils_clear_screen()
+
+    keranjangs = utils_get_data("keranjang")
+    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"] and keranjang['is_checkout'] == False]
+    for keranjang in keranjangs:
+        del keranjang['user_id']
+        del keranjang['is_checkout']
+    if(len(keranjangs) == 0):
+        console.print("Tidak Ada Produk di Keranjang Yang Ditemukan", style=custom_theme["error"])
+        time.sleep(2)
+        return None
+    utils_display_table(keranjangs)
+    
+    keranjang_ids = input("Masukan Id Keranjang Yang Ingin Di Checkout: (pisahkan dengan , untuk lebih dari 1 keranjang): ")
+    creadit_card = input("Masukan Nomor Kartu Kredit Anda: ")
+    keranjang_ids = keranjang_ids.split(",")
+    
+    keranjangs = utils_get_data("keranjang")
+    for keranjang in keranjangs:
+        if str(keranjang['id']) in keranjang_ids:
+            keranjang['is_checkout'] = True
+    
+    utils_save_data("keranjang", keranjangs)
+
+    # update the stock of the product
+    produks = utils_get_data("produk")
+    for keranjang in keranjangs:
+        produk = next((produk for produk in produks if str(produk["id"]) == str(keranjang["produk_id"])), None)
+        if produk:
+            produk["stock"] = int(produk["stock"]) - int(keranjang["qty"])
+    utils_save_data("produk", produks)  
+
+    transactions = utils_get_data("transaksi")
+    
+    transkasi_code = Random().randint(100000, 999999)
+    for keranjang_id in keranjang_ids:
+        keranjang = next((keranjang for keranjang in keranjangs if str(keranjang['id']) == keranjang_id), None)
+        if keranjang:
+            if len(transactions) == 0:
+                transaction_id = 1
+            else:
+                transaction_id = transactions[len(transactions) - 1]['id'] + 1
+            transactions.append({
+                "id": transaction_id,
+                "user_id": USER["ID"],
+                "produk_id": keranjang["produk_id"],
+                "transaksi_code": transkasi_code,
+                "credit_card": creadit_card,
+                "qty": keranjang["qty"],
+                "date": time.strftime("%Y-%m-%d %H:%M:%S")
+            })
+            transaction_id += 1
+
+    utils_save_data("transaksi", transactions)
+
+    console.print("Checkout Berhasil", style=custom_theme["success"])
+    
 def page_my_wishlist():
     while USER["CURRECT_PAGE"] == "MY_WISHLIST":
         utils_clear_screen()
-        console.print("[green]---Keranjang Saya---[/]\nPilih Menu:\n1. Lihat Keranjang\n2. Hapus Produk Dari Keranjang \n3. Kembali Ke Main Menu")
+        console.print("[green]---Keranjang Saya---[/]\nPilih Menu:\n1. Lihat Keranjang\n2. Hapus Produk Dari Keranjang \n3. Checkout Kerajang\n4. Kembali Ke Main Menu")
         choice = input("Masukan Pilihan: ")
         if choice == "1":
             page_my_wishlist_read()
         elif choice == "2":
             page_my_wishlist_delete()
         elif choice == "3":
+            page_my_wishlist_checkout()
+        elif choice == "4":
             USER["CURRECT_PAGE"] = "MAIN"
             return None
         else:
@@ -305,7 +366,7 @@ def page_my_wishlist_read():
     utils_clear_screen()
 
     keranjangs = utils_get_data("keranjang")
-    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"]]
+    keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"] and keranjang['is_checkout'] == False]
 
     for keranjang in keranjangs:
         del keranjang['user_id']
