@@ -14,6 +14,9 @@ custom_theme = {"success" : "bold white on green", "error" : "bold white on red"
 
 # get data from json file required string of the file name like "user" to get the data from ./db/user.json
 def utils_get_data(name_of_file):
+    # make error if the file is not exist
+    if not os.path.exists(f'./db/{name_of_file}.json'): 
+        return []   
     with open(f'./db/{name_of_file}.json') as data:
         return json.load(data)
 
@@ -61,6 +64,14 @@ def utils_display_table(data_tables):
 
     console.print(table)
 
+def utils_get_non_empty_input(prompt):
+    while True:
+        value = input(prompt)
+        if value.strip():
+            return value
+        else:
+            print("Input tidak boleh kosong. Silakan coba lagi.")
+
 # login page to authenticate the user base of ./db/user.json give 3 chances to login and return the USER["ID"] if the user is authenticated
 def page_login():
     users = utils_get_data("user")
@@ -68,8 +79,8 @@ def page_login():
     chances = 3
     while chances > 0:
         utils_clear_screen()
-        print("=Login=")
-        email = input("Masukkan Username: ")
+        console.print("---Login---", style="green")
+        email = utils_get_non_empty_input("Masukkan Username: ")
         password = getpass.getpass("Masukkan Password: ")
         for user in users:
             if user['email'] == email and user['password'] == password:
@@ -77,9 +88,9 @@ def page_login():
                 USER["ID"] = user["id"]
                 USER["EMAIL"] = user["email"]
                 return None
-        console.print("Login Gagal", style=custom_theme["error"])
+        console.print("Email Atau Password Salah", style=custom_theme["error"])
         chances -= 1
-        time.sleep(1)
+        time.sleep(2)
 
 #register page to register the user base of ./db/user.json and return None 
 def page_register():
@@ -116,7 +127,7 @@ def page_register():
     utils_save_data("user", users)
 
     console.print("Register Berhasil", style=custom_theme["success"])
-    time.sleep(1)
+    time.sleep(2)
 
 # autheticate page return the USER["ID"] if the user is authenticated
 def page_authenticate():
@@ -136,13 +147,18 @@ def page_authenticate():
 # create the product and save it to the database
 def page_my_product_create():
     utils_clear_screen()
-    print("=Tambah Produk=")
-    name = input("Masukkan Nama Produk: ")
-    price = input("Masukkan Harga Produk: ")
-    stock = input("Masukkan Stok Produk: ")
-    category = input("Masukkan Kategori Produk: ")
+    print("---Tambah Produk---")
+    name = utils_get_non_empty_input("Masukkan Nama Produk: ")
+    price = utils_get_non_empty_input("Masukkan Harga Produk: ")
+    stock = utils_get_non_empty_input("Masukkan Stok Produk: ")
+    category = utils_get_non_empty_input("Masukkan Kategori Produk: ")
 
     produks = utils_get_data("produk")
+
+    if((type(price) == str and price.isdigit() == False) or (type(stock) == str and stock.isdigit() == False)):
+        console.print("Harga dan Stok Harus Angka", style=custom_theme["error"])
+        time.sleep(2)
+        return None
 
     for produk in produks:
         if produk['name'] == name:
@@ -167,7 +183,7 @@ def page_my_product_create():
     utils_save_data("produk", produks)
 
     console.print("Produk Berhasil Ditambahkan", style=custom_theme["success"])
-    time.sleep(1)
+    time.sleep(2)
 
     return None
 
@@ -190,7 +206,7 @@ def page_my_product_read():
         return None
     else:
         print("Tidak Ada Produk Yang Ditemukan")
-        time.sleep(1)
+        time.sleep(2)
         return None
 
 # read the product from the database and update the selected product by user from the database
@@ -206,18 +222,23 @@ def page_my_product_update():
         
         if produks == []:
             print("Tidak Ada Produk Yang Ditemukan")
-            time.sleep(1)
+            time.sleep(2)
             return None
         
         console.print("[green]---Produk Saya - Lihat Produk Yang Ingin Diubah---[/]")
         utils_display_table(produks)
 
-        produk_id = input("Masukan Produk Id Produk Yang Ingin Di Ubah: ")
+        produk_id = utils_get_non_empty_input("Masukan Produk Id Produk Yang Ingin Di Ubah: ")
 
-        name = input("Masukkan Nama Produk: ")
-        price = input("Masukkan Harga Produk: ")
-        stock = input("Masukkan Stok Produk: ")
-        category = input("Masukkan Kategori Produk: ")
+        name = utils_get_non_empty_input("Masukkan Nama Produk: ")
+        price = utils_get_non_empty_input("Masukkan Harga Produk: ")
+        stock = utils_get_non_empty_input("Masukkan Stok Produk: ")
+        category = utils_get_non_empty_input("Masukkan Kategori Produk: ")
+
+        if((type(price) == str and price.isdigit() == False) or (type(stock) == str and stock.isdigit() == False)):
+            console.print("Harga dan Stok Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
 
         produks = utils_get_data("produk")
         produks = [produk for produk in produks if produk['id'] != int(produk_id)]
@@ -233,11 +254,11 @@ def page_my_product_update():
         utils_save_data("produk", produks)
 
         console.print("Produk Berhasil Diubah", style=custom_theme["success"])
-        time.sleep(1)
+        time.sleep(2)
         return None
     else:
         print("Tidak Ada Produk Yang Ditemukan")
-        time.sleep(1)
+        time.sleep(2)
         return None
 
 #  read prduct from database and delete the selected product by user from the database
@@ -258,11 +279,11 @@ def page_my_product_delete():
         utils_save_data("produk", produks)
 
         print("Produk Berhasil Dihapus")
-        time.sleep(1)
+        time.sleep(2)
         return None
     else:
         print("Tidak Ada Produk Yang Ditemukan")
-        time.sleep(1)
+        time.sleep(2)
         return None
 
 # main my product page to display the menu of my product
@@ -379,7 +400,7 @@ def page_my_wishlist_read():
         return None
     else:
         print("Tidak Ada Barang Di Keranjang Yang Ditemukan")
-        time.sleep(1)
+        time.sleep(2)
         return None
 
 def page_my_wishlist_delete():
@@ -389,16 +410,20 @@ def page_my_wishlist_delete():
     keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"] and keranjang['is_checkout'] == False]
 
     if len(keranjangs) > 0:
-        print("=Keranjang Saya - Lihat Keranjang Yang Ingin Dihapus=")
+        console.print("---Keranjang Saya - Lihat Keranjang Yang Ingin Dihapus---", style="green")
         utils_display_table(keranjangs)
 
         keranjang_id = input("Masukan Keranjang Id Yang Ingin Di Hapus: ")
+        if(keranjang_id.isdigit() == False):
+            console.print("Keranjang ID Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
         keranjangs = [keranjang for keranjang in keranjangs if keranjang['id'] != int(keranjang_id)]
 
         utils_save_data("keranjang", keranjangs)
 
         print("Keranjang Berhasil Dihapus")
-        time.sleep(1)
+        time.sleep(2)
         return None
     
 def page_history_product():
@@ -445,6 +470,12 @@ def page_buy_product_read():
         del produk['user_id']
 
     console.print("[green]---Beli Produk - Lihat Produk---[/]")
+
+    if(len(produks) == 0) :
+        console.print("Produk Tidak Tersedia", style=custom_theme["error"])
+        time.sleep(2)
+        return None
+
     utils_display_table(produks)
 
     while True:
@@ -453,7 +484,7 @@ def page_buy_product_read():
             return None
         if ":" not in produk_ids:
             console.print("Format ID Produk Salah", style=custom_theme["error"])
-            time.sleep(1)
+            time.sleep(2)
             return None
         produk_id = produk_ids.split(":")[0]
         produk_qty = produk_ids.split(":")[1]
@@ -468,13 +499,13 @@ def page_buy_product_read():
             #check apakah kuantitas yang diinputkan lebih dari stok
             if int(produk_qty) > int(produk["stock"]):
                 console.print("Kuantitas Yang Dimasukkan Melebihi Stok", style=custom_theme["error"])
-                time.sleep(1)
+                time.sleep(2)
                 return None
             
             # check if the product is already in the cart
             if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"]), None):
                 console.print("Produk Sudah Ada Di Keranjang, Silahkan Hapus Dahulu", style=custom_theme["error"])
-                time.sleep(1)
+                time.sleep(2)
                 return None
 
             keranjangs.append({
@@ -488,11 +519,11 @@ def page_buy_product_read():
             utils_save_data("keranjang", keranjangs)
 
             console.print("Produk Berhasil Ditambahkan Ke Keranjang", style=custom_theme["success"])
-            time.sleep(1)
+            time.sleep(2)
             return None
         else:
             console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
-            time.sleep(1)
+            time.sleep(2)
             return None
 
 def page_buy_product_search():
@@ -518,7 +549,7 @@ def page_buy_product_search():
         utils_display_table(filtered_produks)
     else:
         console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
-        time.sleep(1)
+        time.sleep(2)
         return None
 
     while True:
@@ -527,7 +558,7 @@ def page_buy_product_search():
             return None
         if ":" not in produk_ids:
             console.print("Format ID Produk Salah", style=custom_theme["error"])
-            time.sleep(1)
+            time.sleep(2)
             return None
         produk_id = produk_ids.split(":")[0]
         produk_qty = produk_ids.split(":")[1]
@@ -541,12 +572,12 @@ def page_buy_product_search():
             
             if int(produk_qty) > int(produk["stock"]):
                 console.print("Kuantitas Yang Dimasukkan Melebihi Stok", style=custom_theme["error"])
-                time.sleep(1)
+                time.sleep(2)
                 return None
             
             if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"]), None):
                 console.print("Produk Sudah Ada Di Keranjang, Silahkan Hapus Dahulu", style=custom_theme["error"])
-                time.sleep(1)
+                time.sleep(2)
                 return None
 
             keranjangs.append({
@@ -560,11 +591,11 @@ def page_buy_product_search():
             utils_save_data("keranjang", keranjangs)
 
             console.print("Produk Berhasil Ditambahkan Ke Keranjang", style=custom_theme["success"])
-            time.sleep(1)
+            time.sleep(2)
             return None
         else:
             console.print("Produk Tidak Ditemukan", style=custom_theme["error"])
-            time.sleep(1)
+            time.sleep(2)
             return None
 
 def page_buy_product_category():
@@ -605,7 +636,7 @@ def page_main():
         page_history_product()
     elif choice == "5":
         utils_clear_screen()
-        print("Terima Kasih Telah Menggunakan Tekom Ecoomerce")
+        console.print("---Terima Kasih Telah Menggunakan Tekom Ecoomerce---", style="green")
         exit()
     else:
         print("Pilihan Tidak Ada")
