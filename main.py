@@ -1,5 +1,5 @@
 from random import Random
-import json, os, time, getpass
+import json, os, time, getpass, hashlib
 from rich.console import Console
 from rich.table import Table
 
@@ -11,6 +11,12 @@ USER = {
 }
 console = Console()
 custom_theme = {"success" : "bold white on green", "error" : "bold white on red"}
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+def verify_password(stored_password, provided_password):
+    return stored_password == hashlib.sha256(provided_password.encode()).hexdigest()
 
 # get data from json file required string of the file name like "user" to get the data from ./db/user.json
 def utils_get_data(name_of_file):
@@ -83,7 +89,7 @@ def page_login():
         email = utils_get_non_empty_input("Masukkan Username: ")
         password = getpass.getpass("Masukkan Password: ")
         for user in users:
-            if user['email'] == email and user['password'] == password:
+            if user['email'] == email and verify_password(user['password'], password):
                 print("Login Berhasil")
                 USER["ID"] = user["id"]
                 USER["EMAIL"] = user["email"]
@@ -118,10 +124,11 @@ def page_register():
     else:
         user_id = users[len(users) - 1]['id'] + 1
 
+    hashed_password = hash_password(password)
     users.append({
         "id": user_id,
         "email": email,
-        "password": password
+        "password": hashed_password
     })
     
     utils_save_data("user", users)
