@@ -1,3 +1,7 @@
+# Muhammad Kevin Almer
+# Nala Arham Rozana
+# Farrel Naufal
+
 from random import Random
 import json, os, time, getpass, hashlib
 from rich.console import Console
@@ -115,8 +119,8 @@ def page_register():
     
     for user in users:
         if user['email'] == email:
-            print("Email Sudah Terdaftar")
-            time.sleep(.5)
+            console.print("Email Sudah Terdaftar", style=custom_theme["error"])
+            time.sleep(1)
             return None
 
     if(len(users) == 0):
@@ -456,7 +460,7 @@ def page_my_wishlist_delete():
             if produk:
                 keranjang["produk_name"] = produk["name"]
                 keranjang["price"] = produk["price"]
-                keranjang["total"] = produk["price"] * keranjang["qty"]
+                keranjang["total"] = int(produk["price"]) * int(keranjang["qty"])
 
             del keranjang['is_checkout']
 
@@ -465,6 +469,11 @@ def page_my_wishlist_delete():
         keranjang_id = input("Masukan Keranjang Id Yang Ingin Di Hapus: ")
         if(keranjang_id.isdigit() == False):
             console.print("Keranjang ID Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
+        # check if the keranjang id is exist
+        if not next((keranjang for keranjang in keranjangs if keranjang['id'] == int(keranjang_id)), None):
+            console.print("Keranjang Tidak Ditemukan", style=custom_theme["error"])
             time.sleep(2)
             return None
         keranjangs = [keranjang for keranjang in keranjangs if keranjang['id'] != int(keranjang_id)]
@@ -537,6 +546,11 @@ def page_buy_product_read():
             return None
         produk_id = produk_ids.split(":")[0]
         produk_qty = produk_ids.split(":")[1]
+        # check produk_id number and produk_qty number
+        if(produk_id.isdigit() == False or produk_qty.isdigit() == False):
+            console.print("Produk ID dan Kuantitas Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
         produk = next((produk for produk in produks if produk["id"] == int(produk_id)), None)
         if produk:
             keranjangs = utils_get_data("keranjang")
@@ -550,7 +564,7 @@ def page_buy_product_read():
                 time.sleep(2)
                 return None
             
-            if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"]), None):
+            if next((keranjang for keranjang in keranjangs if keranjang["produk_id"] == produk_id and keranjang["user_id"] == USER["ID"] and keranjang['is_checkout'] == False), None):
                 console.print("Produk Sudah Ada Di Keranjang, Silahkan Hapus Dahulu", style=custom_theme["error"])
                 time.sleep(2)
                 return None
@@ -609,6 +623,11 @@ def page_buy_product_search():
             return None
         produk_id = produk_ids.split(":")[0]
         produk_qty = produk_ids.split(":")[1]
+        # check produk_id number and produk_qty number
+        if(produk_id.isdigit() == False or produk_qty.isdigit() == False):
+            console.print("Produk ID dan Kuantitas Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
         produk = next((produk for produk in filtered_produks if produk["id"] == int(produk_id)), None)
         if produk:
             keranjangs = utils_get_data("keranjang")
@@ -681,6 +700,11 @@ def page_buy_product_category():
             return None
         produk_id = produk_ids.split(":")[0]
         produk_qty = produk_ids.split(":")[1]
+        # check produk_id number and produk_qty number
+        if(produk_id.isdigit() == False or produk_qty.isdigit() == False):
+            console.print("Produk ID dan Kuantitas Harus Angka", style=custom_theme["error"])
+            time.sleep(2)
+            return None
         produk = next((produk for produk in produks if produk["id"] == int(produk_id)), None)
         if produk:
             keranjangs = utils_get_data("keranjang")
@@ -756,16 +780,21 @@ def page_main():
         exit()
     else:
         print("Pilihan Tidak Ada")
-    
+
 def start():
-    # authenticate the user before going to the main page 
-    while not USER["ID"]:
-        utils_clear_screen()
-        page_authenticate()
+    # always catch error and display the error message
+    try:
+        # authenticate the user before going to the main page 
+        while not USER["ID"]:
+            utils_clear_screen()
+            page_authenticate()
 
-    # main page
-    while USER["CURRECT_PAGE"] != "EXIT":
-        utils_clear_screen()
-        page_main()
-
+        # main page
+        while USER["CURRECT_PAGE"] != "EXIT":
+            utils_clear_screen()
+            page_main()
+    except Exception as er:
+        print(er)
+        console.print("Something went wrong", style=custom_theme["error"])
+    
 start()
