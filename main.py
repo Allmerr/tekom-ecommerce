@@ -325,9 +325,16 @@ def page_my_wishlist_checkout():
 
     keranjangs = utils_get_data("keranjang")
     keranjangs = [keranjang for keranjang in keranjangs if 'user_id' in keranjang and keranjang['user_id'] == USER["ID"] and keranjang['is_checkout'] == False]
+    produks = utils_get_data("produk")
     for keranjang in keranjangs:
+        produk = next((produk for produk in produks if str(produk["id"]) == keranjang["produk_id"]), None)
+        if produk:
+            keranjang["produk_name"] = produk["name"]
+            keranjang["price"] = produk["price"]
+            keranjang["total"] = int(produk["price"]) * int(keranjang["qty"])
         del keranjang['user_id']
         del keranjang['is_checkout']
+
     if(len(keranjangs) == 0):
         console.print("Tidak Ada Produk di Keranjang Yang Ditemukan", style=custom_theme["error"])
         time.sleep(2)
@@ -377,6 +384,7 @@ def page_my_wishlist_checkout():
     utils_save_data("transaksi", transactions)
 
     console.print("Checkout Berhasil", style=custom_theme["success"])
+    time.sleep(2)
     
 def page_my_wishlist():
     while USER["CURRECT_PAGE"] == "MY_WISHLIST":
@@ -407,6 +415,16 @@ def page_my_wishlist_read():
 
     if len(keranjangs) > 0:
         console.print("---Keranjang Saya - Lihat Keranjang---", style="green")
+        # change produk id to produk name
+        produks = utils_get_data("produk")
+        for keranjang in keranjangs:
+            produk = next((produk for produk in produks if str(produk["id"]) == keranjang["produk_id"]), None)
+            if produk:
+                keranjang["produk_name"] = produk["name"]
+                keranjang["price"] = produk["price"]
+                keranjang["total"] = int(produk["price"]) * int(keranjang["qty"])
+
+            del keranjang['is_checkout']
         utils_display_table(keranjangs)
 
         input("Tekan Enter Untuk Kembali Ke Menu")
@@ -424,6 +442,17 @@ def page_my_wishlist_delete():
 
     if len(keranjangs) > 0:
         console.print("---Keranjang Saya - Lihat Keranjang Yang Ingin Dihapus---", style="green")
+        # change produk id to produk name
+        produks = utils_get_data("produk")
+        for keranjang in keranjangs:
+            produk = next((produk for produk in produks if str(produk["id"]) == keranjang["produk_id"]), None)
+            if produk:
+                keranjang["produk_name"] = produk["name"]
+                keranjang["price"] = produk["price"]
+                keranjang["total"] = produk["price"] * keranjang["qty"]
+
+            del keranjang['is_checkout']
+
         utils_display_table(keranjangs)
 
         keranjang_id = input("Masukan Keranjang Id Yang Ingin Di Hapus: ")
